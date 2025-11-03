@@ -1,13 +1,11 @@
 name: RDP
-
 on:
   workflow_dispatch:
-
 jobs:
   secure-rdp:
     runs-on: windows-latest
     # Remove timeout to attempt indefinite run (note: GitHub Actions has inherent limits, e.g., max 6 hours for free tiers)
-    # timeout-minutes: 3600  # Commented out for "lifetime" attempt, but GitHub enforces limits
+    # timeout-minutes: 3600 # Commented out for "lifetime" attempt, but GitHub enforces limits
     steps:
       - name: Configure Core RDP Settings
         run: |
@@ -25,7 +23,6 @@ jobs:
             dir=in action=allow protocol=TCP localport=3389
           # (Optional) Restart the Remote Desktop service to ensure changes take effect
           Restart-Service -Name TermService -Force
-
       - name: Create RDP User with Fixed Credentials
         run: |
           $username = "runkzerigala"
@@ -39,7 +36,6 @@ jobs:
             Write-Error "User creation failed"
             exit 1
           }
-
       - name: Install Tailscale
         run: |
           $tsUrl = "https://pkgs.tailscale.com/stable/tailscale-setup-1.82.0-amd64.msi"
@@ -47,7 +43,6 @@ jobs:
           Invoke-WebRequest -Uri $tsUrl -OutFile $installerPath
           Start-Process msiexec.exe -ArgumentList "/i", "`"$installerPath`"", "/quiet", "/norestart" -Wait
           Remove-Item $installerPath -Force
-
       - name: Establish Tailscale Connection
         run: |
           # Bring up Tailscale with the provided auth key and set a unique hostname
@@ -65,7 +60,6 @@ jobs:
             exit 1
           }
           echo "TAILSCALE_IP=$tsIP" >> $env:GITHUB_ENV
-
       - name: Verify RDP Accessibility
         run: |
           Write-Host "Tailscale IP: $env:TAILSCALE_IP"
@@ -76,7 +70,6 @@ jobs:
             exit 1
           }
           Write-Host "TCP connectivity successful!"
-
       - name: Maintain Connection
         run: |
           Write-Host "`n=== RDP ACCESS ==="
